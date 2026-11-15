@@ -24,7 +24,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing required packages...'
-                sh 'pip install -r requirements.txt --quiet'
+                sh 'pip install --break-system-packages -r requirements.txt --quiet || pip install -r requirements.txt --quiet'
             }
         }
 
