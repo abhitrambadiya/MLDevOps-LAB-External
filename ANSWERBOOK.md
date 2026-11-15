@@ -2,6 +2,7 @@
 **Course:** ML DevOps Laboratory (`UAMPC0732` / `UDSPC0732`)  
 **Department:** Computer Science & Engineering (AIML & DS)  
 **KIT’s College of Engineering (Autonomous), Kolhapur**  
+**GitHub Repository Name:** `MLDevOps-LAB-External`
 
 ---
 
@@ -14,14 +15,14 @@
 
 ## ⚡ 1. Minimal Working Source Code
 
-### A. Python Program for Multiplication (`src/math_operations.py` - 3 lines)
+### A. Python Multiplication Function (`src/math_operations.py`)
 ```python
 def multiply(a, b):
     res = float(a) * float(b)
     return int(res) if res.is_integer() else res
 ```
 
-### B. Interactive CLI Program (`src/cli.py` - 10 lines)
+### B. Interactive CLI Program (`src/cli.py`)
 ```python
 from math_operations import multiply
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### C. FastAPI Integration with Plain HTML UI (`src/main.py` - 25 lines)
+### C. FastAPI with Plain HTML UI (`src/main.py`)
 ```python
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -64,7 +65,7 @@ def multiply_post(payload: dict):
     return {"a": a, "b": b, "result": multiply(a, b)}
 ```
 
-### D. Pytest Test Suite (`tests/test_app.py` - 25 lines)
+### D. Pytest Test Suite (`tests/test_app.py`)
 ```python
 import pytest
 from fastapi.testclient import TestClient
@@ -95,10 +96,9 @@ def test_home_ui():
     assert "<form" in res.text
 ```
 
-### E. Evidently AI Monitoring (`src/monitoring.py` - 18 lines)
+### E. Evidently AI Monitoring (`src/monitoring.py`)
 ```python
-import os
-import pandas as pd
+import os, pandas as pd
 from evidently import Report
 from evidently.presets import DataDriftPreset
 
@@ -117,34 +117,60 @@ if __name__ == "__main__":
     run_monitoring()
 ```
 
-### F. Jenkinsfile (`Jenkinsfile` - 25 lines)
+### F. Jenkinsfile with Auto Git Push Trigger & Compile (`Jenkinsfile`)
 ```groovy
 pipeline {
     agent any
 
+    // Automatically triggers pipeline on any push to Git (checks every minute)
+    triggers {
+        pollSCM('* * * * *')
+    }
+
     stages {
-        stage('Install Dependencies') {
+        stage('Checkout') {
             steps {
-                sh 'pip install -r requirements.txt'
+                echo 'Fetching latest code from Git repository...'
+                checkout scm
             }
         }
+
+        stage('Compile Code') {
+            steps {
+                echo 'Compiling Python code to bytecode and checking syntax...'
+                sh 'python3 -m compileall src/'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing required packages...'
+                sh 'pip install -r requirements.txt --quiet'
+            }
+        }
+
         stage('Run Pytest') {
             steps {
+                echo 'Executing test suite...'
                 sh 'pytest -v'
             }
         }
+
         stage('Evidently Monitoring') {
             steps {
+                echo 'Generating Evidently AI Data Drift report...'
                 sh 'python3 src/monitoring.py'
             }
         }
+
         stage('FastAPI Smoke Test') {
             steps {
+                echo 'Testing FastAPI multiplication endpoint...'
                 sh '''
                     python3 -m uvicorn src.main:app --port 8000 &
                     PID=$!
                     sleep 2
-                    curl -s "http://127.0.0.1:8000/multiply?a=4&b=5"
+                    curl -s "http://127.0.0.1:8000/multiply?a=6&b=7"
                     kill $PID || true
                 '''
             }
@@ -157,25 +183,62 @@ pipeline {
 
 ## 💻 2. All Commands Used for Configuration
 
+### A. Git & GitHub Setup (`MLDevOps-LAB-External`)
 ```bash
-# 1. Install required packages
-pip install fastapi uvicorn pytest httpx pandas evidently
+cd "PS_C_Multiplication"
 
-# 2. Run CLI Multiplication program
-python3 src/cli.py
-
-# 3. Run Pytest test suite
-pytest -v
-
-# 4. Run Evidently AI drift monitoring
-python3 src/monitoring.py
-
-# 5. Start FastAPI Server
-uvicorn src.main:app --reload --port 8000
-# Browser: http://127.0.0.1:8000
-
-# 6. Git commands
+# Initialize local git
 git init
 git add .
-git commit -m "feat: minimal working multiplication pipeline"
+git commit -m "feat: complete ML DevOps POE pipeline"
+
+# Link to GitHub repository
+git branch -M main
+git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/MLDevOps-LAB-External.git
+git push -u origin main
 ```
+
+### B. Launch & Open Jenkins
+```bash
+# 1. Start Jenkins via Docker
+docker run -d -p 8080:8080 -p 50000:50000 --name jenkins -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
+
+# 2. Retrieve initial admin password
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
+# 3. Open Jenkins in browser
+open http://localhost:8080
+```
+
+### C. Jenkins Job Configuration
+1. Click **New Item** ➔ Enter name: `MLDevOps-LAB-External` ➔ Select **Pipeline** ➔ Click **OK**.
+2. Under **Build Triggers**, check **Poll SCM** (Schedule: `* * * * *`) or **GitHub hook trigger for GITScm polling**.
+3. Under **Pipeline**:
+   - Definition: **Pipeline script from SCM**
+   - SCM: **Git**
+   - Repository URL: `https://github.com/<YOUR_GITHUB_USERNAME>/MLDevOps-LAB-External.git`
+   - Branch Specifier: `*/main`
+   - Script Path: `Jenkinsfile`
+4. Click **Save**.
+
+---
+
+## 🎬 3. External Examiner Demonstration Steps
+
+1. **Show Code in VS Code**:
+   - `src/math_operations.py`: Multiplication logic.
+   - `src/cli.py`: Interactive CLI input.
+   - `src/main.py`: FastAPI web service with plain HTML form.
+   - `Jenkinsfile`: Git push trigger + Compile + Test + Monitor.
+2. **Demonstrate Auto-Trigger on Git Push**:
+   - Make a change in VS Code, run `git commit -am "update"` and `git push origin main`.
+   - Show Jenkins automatically detecting the push within 60 seconds and starting build.
+3. **Show Jenkins Pipeline Execution**:
+   - Show all stages turning green:
+     `[Checkout] -> [Compile Code] -> [Install Dependencies] -> [Run Pytest] -> [Evidently Monitoring] -> [FastAPI Smoke Test]`
+   - Open **Console Output** to verify the compilation (`compileall src/`) and test results.
+4. **Show Web Application**:
+   - Open `http://localhost:8000` in browser.
+   - Enter two numbers into the HTML form and click "Multiply" to see the output.
+5. **Show Evidently Monitoring Report**:
+   - Open `reports/evidently_drift_report.html` in browser.
