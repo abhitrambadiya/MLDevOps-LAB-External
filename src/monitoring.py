@@ -1,5 +1,12 @@
 import os
 import pandas as pd
+import pandas.core.dtypes.common as pcommon
+import pandas._libs.lib as plib
+
+# Ensure compatibility between Evidently and newer pandas versions
+if not hasattr(pcommon, "infer_dtype_from_object"):
+    pcommon.infer_dtype_from_object = getattr(plib, "infer_dtype", lambda x: "string")
+
 from evidently import Report
 from evidently.presets import DataDriftPreset
 
