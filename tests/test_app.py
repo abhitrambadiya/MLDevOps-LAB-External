@@ -14,6 +14,7 @@ def test_multiply():
     assert multiply(-2, 5) == -10
     assert multiply(0, 7) == 0
     assert multiply(2.5, 2) == 5
+    assert multiply(10, 10) == 100
 
 def test_api_get():
     res = client.get("/multiply?a=6&b=7")

@@ -11,7 +11,8 @@ app = FastAPI()
 @app.get("/", response_class=HTMLResponse)
 def home():
     return """
-    <h2>Multiplication Calculator</h2>
+    <h2>Multiplication Calculator - ML DevOps Lab POE</h2>
+    <p>Status: Ready</p>
     <form action="/multiply" method="get">
         Number 1: <input type="number" step="any" name="a" required><br><br>
         Number 2: <input type="number" step="any" name="b" required><br><br>

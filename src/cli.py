@@ -6,7 +6,7 @@ except ImportError:
 def main():
     a = float(input("Enter first number: "))
     b = float(input("Enter second number: "))
-    print(f"Result: {a} * {b} = {multiply(a, b)}")
+    print(f"Calculation Result: {a} * {b} = {multiply(a, b)}")
 
 if __name__ == "__main__":
     main()
